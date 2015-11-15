@@ -1,0 +1,237 @@
+```{r}
+# data.table references
+# https://rawgit.com/wiki/Rdatatable/data.table/vignettes/datatable-intro-vignette.html
+# https://s3.amazonaws.com/assets.datacamp.com/img/blog/data+table+cheat+sheet.pdf
+#  Scott Karr
+#  HW3 Mushroom Classification
+#  11.14.2015
+
+## Remove objects in order to rerun as repeatable script making incremental improvements
+rm(df_mushrooms)
+rm(dt_mushrooms)
+rm(theUrl)
+## Load Data Frame from website
+require(data.table)
+theUrl <- "https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data"
+df_mushrooms <- read.table(file = theUrl, header = TRUE, sep = ",")
+## Decode column labels and Load as data.table
+setnames(
+  df_mushrooms, 
+  old=c(
+    "p","x","s","n","t","p.1","f","c","n.1","k","e","e.1","s.1","s.2","w","w.1","p.2","w.2","o","p.3","k.1","s.3","u"
+  ), 
+  new=c(
+        "class","cap_shape","cap_surface","cap_color","bruises","odor",
+        "gill_attachment","gill_spacing","gill_size","gill_color",
+        "stalk_shape","stalk_root","stalk_surface_above_ring","stalk_surface_below_ring",
+        "stalk_color_above_ring","stalk_color_below_ring","veil_type","veil_color",
+        "ring_number","ring_type","spore_print_color","population","habitat"
+  )
+)
+dt_mushrooms <- data.table(df_mushrooms)
+## Create column class as key column for indexing
+setkey(dt_mushrooms,"class")
+## Decode key-value pairs for each data.table column 
+### 0. class                     edible=e,poisonous=p
+dt_mushrooms$class <- ifelse(dt_mushrooms$class == "e","edible",
+                      ifelse(dt_mushrooms$class == "p","poisonous","?")
+)
+### 1. cap-shape:  bell=b,conical=c,convex=x,flat=f,knobbed=k,sunken=s
+dt_mushrooms$cap_shape <- 
+  ifelse(dt_mushrooms$cap_shape == "b","bell",
+  ifelse(dt_mushrooms$cap_shape == "c","conical",
+  ifelse(dt_mushrooms$cap_shape == "x","convex",                          
+  ifelse(dt_mushrooms$cap_shape == "f","flat",                            
+  ifelse(dt_mushrooms$cap_shape == "k","knobbed",
+  ifelse(dt_mushrooms$cap_shape == "s","sunken","?")))))
+)
+### 2. cap-surface:  fibrous=f,grooves=g,scaly=y,smooth=s
+dt_mushrooms$cap_surface <- 
+  ifelse(dt_mushrooms$cap_surface == "f","fibrous",
+  ifelse(dt_mushrooms$cap_surface == "g","grooves",
+  ifelse(dt_mushrooms$cap_surface == "y","scaly",
+  ifelse(dt_mushrooms$cap_surface == "s","smooth","?")))
+)
+### 3. cap_color:  brown=n,buff=b,cinnamon=c,gray=g,green=r,pink=p,purple=u,red=e,white=w,yellow=y
+dt_mushrooms$cap_color <- 
+  ifelse(dt_mushrooms$cap_color == "n","brown",
+  ifelse(dt_mushrooms$cap_color == "b","buff",                          
+  ifelse(dt_mushrooms$cap_color == "c","cinnamon",
+  ifelse(dt_mushrooms$cap_color == "g","gray",
+  ifelse(dt_mushrooms$cap_color == "r","green",                          
+  ifelse(dt_mushrooms$cap_color == "p","pink",                            
+  ifelse(dt_mushrooms$cap_color == "u","purple",
+  ifelse(dt_mushrooms$cap_color == "e","red",
+  ifelse(dt_mushrooms$cap_color == "w","white",                                 
+  ifelse(dt_mushrooms$cap_color == "y","yellow","?")))))))))
+)
+### 4. bruises:  bruises=t,no=f
+dt_mushrooms$bruises <- 
+  ifelse(dt_mushrooms$bruises == "t","yes",
+  ifelse(dt_mushrooms$bruises == "f","no","?")
+)
+### 5. odor:  almond=a,anise=l,creosote=c,fishy=y,foul=f,musty=m,none=n,pungent=p,spicy=s
+dt_mushrooms$odor <-      
+  ifelse(dt_mushrooms$odor == "a","almond",
+  ifelse(dt_mushrooms$odor == "l","anise",                          
+  ifelse(dt_mushrooms$odor == "c","creosote",
+  ifelse(dt_mushrooms$odor == "y","fishy",
+  ifelse(dt_mushrooms$odor == "f","foul",                          
+  ifelse(dt_mushrooms$odor == "m","musty",
+  ifelse(dt_mushrooms$odor == "n","none",
+  ifelse(dt_mushrooms$odor == "p","pungent",
+  ifelse(dt_mushrooms$odor == "s","spicy","?"))))))))
+)
+### 6. gill_attachment:  attached=a,descending=d,free=f,notched=n
+dt_mushrooms$gill_attachment <- 
+  ifelse(dt_mushrooms$gill_attachment == "a","attached",
+  ifelse(dt_mushrooms$gill_attachment == "d","descending",
+  ifelse(dt_mushrooms$gill_attachment == "f","free",
+  ifelse(dt_mushrooms$gill_attachment == "n","notched","?")))
+)
+### 7. gill_spacing:  close=c,crowded=w,distant=d
+dt_mushrooms$gill_spacing  <- 
+  ifelse(dt_mushrooms$gill_spacing == "c","close",
+  ifelse(dt_mushrooms$gill_spacing == "w","crowded",
+  ifelse(dt_mushrooms$gill_spacing == "d","distance","?"))
+)
+### 8. gill_size:  broad=b,narrow=n
+dt_mushrooms$gill_size <- 
+  ifelse(dt_mushrooms$gill_size == "b","broad",
+  ifelse(dt_mushrooms$gill_size == "n","narrow","?")
+)
+### 9. gill_color:  black=k,brown=n,buff=b,chocolate=h,gray=g,green=r,orange=o,pink=p,purple=u,red=e,white=w,yellow=y
+dt_mushrooms$gill_color <-      
+  ifelse(dt_mushrooms$gill_color == "k","black",
+  ifelse(dt_mushrooms$gill_color == "n","brown",
+  ifelse(dt_mushrooms$gill_color == "b","buff",
+  ifelse(dt_mushrooms$gill_color == "h","chocolate",
+  ifelse(dt_mushrooms$gill_color == "g","gray",              
+  ifelse(dt_mushrooms$gill_color == "r","green",
+  ifelse(dt_mushrooms$gill_color == "o","orange",
+  ifelse(dt_mushrooms$gill_color == "p","pink",
+  ifelse(dt_mushrooms$gill_color == "u","purple",
+  ifelse(dt_mushrooms$gill_color == "e","red",
+  ifelse(dt_mushrooms$gill_color == "w","white",
+  ifelse(dt_mushrooms$gill_color == "y","yellow","?")))))))))))
+)
+###10. stalk_shape:              enlarging=e,tapering=t
+dt_mushrooms$stalk_shape <- 
+  ifelse(dt_mushrooms$stalk_shape == "e","enlarging",
+  ifelse(dt_mushrooms$stalk_shape == "t","tapering","?")
+)
+###11. stalk_root:               bulbous=b,club=c,cup=u,equal=e,rhizomorphs=z,rooted=r,missing=?
+dt_mushrooms$stalk_root <-  
+  ifelse(dt_mushrooms$stalk_root == "b","bulbous",
+  ifelse(dt_mushrooms$stalk_root == "c","club",
+  ifelse(dt_mushrooms$stalk_root == "u","cup",                          
+  ifelse(dt_mushrooms$stalk_root == "e","equal",                            
+  ifelse(dt_mushrooms$stalk_root == "z","rhizomorphs",
+  ifelse(dt_mushrooms$stalk_root == "r","rooted","?")))))
+)
+###12. stalk_surface_above_ring: fibrous=f,scaly=y,silky=k,smooth=s
+dt_mushrooms$stalk_surface_above_ring <-
+  ifelse(dt_mushrooms$stalk_surface_above_ring == "f","fibrous",
+  ifelse(dt_mushrooms$stalk_surface_above_ring == "y","scaly",
+  ifelse(dt_mushrooms$stalk_surface_above_ring == "k","silky",
+  ifelse(dt_mushrooms$stalk_surface_above_ring == "s","smooth","?")))
+)
+###13. stalk_surface_below_ring: fibrous=f,scaly=y,silky=k,smooth=s
+dt_mushrooms$stalk_surface_below_ring <- 
+  ifelse(dt_mushrooms$stalk_surface_below_ring == "f","fibrous",
+  ifelse(dt_mushrooms$stalk_surface_below_ring == "y","scaly",
+  ifelse(dt_mushrooms$stalk_surface_below_ring == "k","silky",
+  ifelse(dt_mushrooms$stalk_surface_below_ring == "s","smooth","?")))
+)
+###14. stalk_color_above_ring:  brown=n,buff=b,cinnamon=c,gray=g,orange=o,pink=p,red=e,white=w,yellow=y
+dt_mushrooms$stalk_color_above_ring <-  
+  ifelse(dt_mushrooms$stalk_color_above_ring == "n","brown",
+  ifelse(dt_mushrooms$stalk_color_above_ring == "b","buff",
+  ifelse(dt_mushrooms$stalk_color_above_ring == "c","cinnamon",                     
+  ifelse(dt_mushrooms$stalk_color_above_ring == "g","gray",
+  ifelse(dt_mushrooms$stalk_color_above_ring == "o","orange",
+  ifelse(dt_mushrooms$stalk_color_above_ring == "p","pink",
+  ifelse(dt_mushrooms$stalk_color_above_ring == "e","red",
+  ifelse(dt_mushrooms$stalk_color_above_ring == "w","white",
+  ifelse(dt_mushrooms$stalk_color_above_ring == "y","yellow","?"))))))))
+)
+###15. stalk_color_below_ring:   brown=n,buff=b,cinnamon=c,gray=g,orange=o,pink=p,red=e,white=w,yellow=y
+dt_mushrooms$stalk_color_below_ring <-  
+  ifelse(dt_mushrooms$stalk_color_below_ring == "n","brown",
+  ifelse(dt_mushrooms$stalk_color_below_ring == "b","buff",
+  ifelse(dt_mushrooms$stalk_color_below_ring == "c","cinnamon",                     
+  ifelse(dt_mushrooms$stalk_color_below_ring == "g","gray",
+  ifelse(dt_mushrooms$stalk_color_below_ring == "o","orange",
+  ifelse(dt_mushrooms$stalk_color_below_ring == "p","pink",
+  ifelse(dt_mushrooms$stalk_color_below_ring == "e","red",
+  ifelse(dt_mushrooms$stalk_color_below_ring == "w","white",
+  ifelse(dt_mushrooms$stalk_color_below_ring == "y","yellow","?"))))))))
+)
+###16. veil_type:  partial=p,universal=u
+dt_mushrooms$veil_type <- 
+  ifelse(dt_mushrooms$veil_type == "p","partial",
+  ifelse(dt_mushrooms$veil_type == "u","universal","?")
+)
+###17. veil_color:  brown=n,orange=o,white=w,yellow=y
+dt_mushrooms$veil_color <-  
+  ifelse(dt_mushrooms$veil_color == "n","brown",
+  ifelse(dt_mushrooms$veil_color == "o","orange",      
+  ifelse(dt_mushrooms$veil_color == "w","white",                                   
+  ifelse(dt_mushrooms$veil_color == "y","yellow","?")))
+)
+###18. ring_number:  none=n,one=o,two=t
+dt_mushrooms$ring_number <- 
+  ifelse(dt_mushrooms$ring_number == "n","none",
+  ifelse(dt_mushrooms$ring_number == "o","one",                                   
+  ifelse(dt_mushrooms$ring_number == "t","two","?"))
+)
+###19. ring_type:  cobwebby=c,evanescent=e,flaring=f,large=l,none=n,pendant=p,sheathing=s,zone=z
+dt_mushrooms$ring_type <-
+  ifelse(dt_mushrooms$ring_type == "c","cobwebby",
+  ifelse(dt_mushrooms$ring_type == "e","evanescent",
+  ifelse(dt_mushrooms$ring_type == "f","flaring",
+  ifelse(dt_mushrooms$ring_type == "l","large",
+  ifelse(dt_mushrooms$ring_type == "n","none",
+  ifelse(dt_mushrooms$ring_type == "p","pendant",
+  ifelse(dt_mushrooms$ring_type == "s","sheathing",
+  ifelse(dt_mushrooms$ring_type == "z","zone","?")))))))
+)
+###20. spore_print_color: black=k,brown=n,buff=b,chocolate=h,green=r,orange=o,purple=u,white=w,yellow=y
+dt_mushrooms$spore_print_color <-  
+  ifelse(dt_mushrooms$spore_print_color == "k","brown",
+  ifelse(dt_mushrooms$spore_print_color == "n","buff",
+  ifelse(dt_mushrooms$spore_print_color == "b","cinnamon",                     
+  ifelse(dt_mushrooms$spore_print_color == "h","gray",
+  ifelse(dt_mushrooms$spore_print_color == "r","orange",
+  ifelse(dt_mushrooms$spore_print_color == "o","pink",
+  ifelse(dt_mushrooms$spore_print_color == "u","red",
+  ifelse(dt_mushrooms$spore_print_color == "w","white",
+  ifelse(dt_mushrooms$spore_print_color == "y","yellow","?"))))))))
+)
+###21. population:  abundant=a,clustered=c,numerous=n,scattered=s,several=v,solitary=y
+dt_mushrooms$population <-  
+  ifelse(dt_mushrooms$population == "a","abundant",
+  ifelse(dt_mushrooms$population == "c","clustered",
+  ifelse(dt_mushrooms$population == "n","numerous",                          
+  ifelse(dt_mushrooms$population == "s","scattered",                           
+  ifelse(dt_mushrooms$population == "v","several",
+  ifelse(dt_mushrooms$population == "y","solitary","?")))))
+)
+###22. habitat:  grasses=g,leaves=l,meadows=m,paths=p,urban=u,waste=w,woods=d
+dt_mushrooms$habitat <-  
+  ifelse(dt_mushrooms$habitat == "g","grasses",
+  ifelse(dt_mushrooms$habitat == "l","leaves",
+  ifelse(dt_mushrooms$habitat == "m","meadows",                          
+  ifelse(dt_mushrooms$habitat == "p","paths",                           
+  ifelse(dt_mushrooms$habitat == "u","urban",                                    
+  ifelse(dt_mushrooms$habitat == "w","waste",
+  ifelse(dt_mushrooms$habitat == "d","woods","?"))))))
+)
+## Result set must be workable
+## Load a result set data.table with a subset of interesting columns
+## Filter on "edible" mushrooms to answer question posed
+ans <- dt_mushrooms[class=="edible", .(cap_shape, cap_surface, cap_color, stalk_shape, gill_spacing, habitat)]
+## Return summary of resulting data.table and show data from this object
+summary(ans)
+ans
+```
